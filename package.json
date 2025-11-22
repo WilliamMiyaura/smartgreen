@@ -1,0 +1,26 @@
+{
+  "name": "smartgreen",
+  "version": "1.0.0",
+  "description": "Projeto 🈷️",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WilliamMiyaura/smartgreen.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/WilliamMiyaura/smartgreen/issues"
+  },
+  "homepage": "https://github.com/WilliamMiyaura/smartgreen#readme",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "mongoose": "^9.0.0"
+  }
+}
