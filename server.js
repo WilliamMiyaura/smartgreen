@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import respostaUsuario from "./respostaUsuario.js";
+import respostaTemperatura from "./respostaTemperatura.js";
 
 dotenv.config();
 
@@ -25,8 +25,8 @@ connectDB();
 
 //CREATE
 app.post("/resposta", async (req, res) => {
-    try{    const novaRespostaUsuario = await respostaUsuario.create(req.body);
-    res.json(novaRespostaUsuario);}catch(error){
+    try{    const novaRespostaTemperatura = await respostaTemperatura.create(req.body);
+    res.json(novaRespostaTemperatura);}catch(error){
         res.json({error : error})
     }
 
@@ -35,8 +35,8 @@ app.post("/resposta", async (req, res) => {
 //READ
 app.get("/resposta", async (req, res) => {
     try{    
-        const respostasUsuario = await respostaUsuario.find();
-        res.json(respostasUsuario)
+        const respostasTemperatura = await respostaTemperatura.find();
+        res.json(respostasTemperatura)
     }catch(error){
         res.json({error : error})
     }
@@ -46,7 +46,7 @@ app.get("/resposta", async (req, res) => {
 //UPDATE
 app.put("/resposta/:id", async (req, res) => {
     try{    
-        const editRespostaUsuario = await respostaUsuario.findByIdAndUpdate(req.params.id, req.body, {new: true});
+        const editRespostaTemperatura = await respostaTemperatura.findByIdAndUpdate(req.params.id, req.body, {new: true});
     }catch(error){
         res.json({error : error})
     }
@@ -54,16 +54,16 @@ app.put("/resposta/:id", async (req, res) => {
 })
 
 //DELETE
-app.put("/resposta/:id", async (req, res) => {
+app.delete("/resposta/:id", async (req, res) => {
     try{    
-        const respostaUsuarioExcluida = await respostaUsuario.findByIdAndDelete(req.params.id);
-        res.json(respostaUsuarioExcluida);
+        const respostaTemperaturaExcluida = await respostaTemperatura.findByIdAndDelete(req.params.id);
+        res.json(respostaTemperaturaExcluida);
     }catch(error){
         res.json({error : error})
     }
 
 })
 
-app.get("/", (req, res) => {})
+//app.get("/", (req, res) => {})
 
 app.listen(PORT, () => console.log(`O servidor está rodando na porta ${PORT}`));
