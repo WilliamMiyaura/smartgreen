@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import respostaTemperatura from "./respostaTemperatura.js";
+import respostaSensores from "./respostaSensores.js";
 
 dotenv.config();
 
@@ -26,8 +26,8 @@ connectDB();
 
 //CREATE
 app.post("/resposta", async (req, res) => {
-    try{    const novaRespostaTemperatura = await respostaTemperatura.create(req.body);
-    res.json(novaRespostaTemperatura);}catch(error){
+    try{    const novaRespostaSensores = await respostaSensores.create(req.body);
+    res.json(novaRespostaSensores);}catch(error){
         res.json({error : error})
     }
 
@@ -36,8 +36,8 @@ app.post("/resposta", async (req, res) => {
 //READ
 app.get("/resposta", async (req, res) => {
     try{    
-        const respostasTemperatura = await respostaTemperatura.find();
-        res.json(respostasTemperatura)
+        const respostasSensores = await respostaSensores.find();
+        res.json(respostasSensores)
     }catch(error){
         res.json({error : error})
     }
@@ -47,7 +47,7 @@ app.get("/resposta", async (req, res) => {
 //UPDATE
 app.put("/resposta/:id", async (req, res) => {
     try{    
-        const editRespostaTemperatura = await respostaTemperatura.findByIdAndUpdate(req.params.id, req.body, {new: true});
+        const editRespostaSensores = await respostaSensores.findByIdAndUpdate(req.params.id, req.body, {new: true});
     }catch(error){
         res.json({error : error})
     }
@@ -57,8 +57,8 @@ app.put("/resposta/:id", async (req, res) => {
 //DELETE
 app.delete("/resposta/:id", async (req, res) => {
     try{    
-        const respostaTemperaturaExcluida = await respostaTemperatura.findByIdAndDelete(req.params.id);
-        res.json(respostaTemperaturaExcluida);
+        const respostaSensoresExcluida = await respostaSensores.findByIdAndDelete(req.params.id);
+        res.json(respostaSensoresExcluida);
     }catch(error){
         res.json({error : error})
     }
