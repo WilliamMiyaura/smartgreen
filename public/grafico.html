@@ -9,39 +9,73 @@
 
     <style>
         body {
-            background: linear-gradient(135deg, #1f4037, #99f2c8);
-            font-family: Arial, sans-serif;
-            color: #fff;
-            text-align: center;
-            padding: 30px;
+            margin: 0;
+            padding: 40px;
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #e5ffe5;
         }
 
         h1 {
-            font-size: 32px;
-            margin-bottom: 20px;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 38px;
+            color: #b8ffd3;
+            text-shadow: 0 0 10px rgba(0,255,150,0.4);
+        }
+
+        .container {
+            display: grid;
+            gap: 35px;
+            max-width: 1100px;
+            margin: auto;
         }
 
         .card {
-            background: rgba(255,255,255,0.12);
-            padding: 20px;
-            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 25px;
+            border-radius: 20px;
             backdrop-filter: blur(6px);
-            width: 80%;
-            margin: auto;
-            box-shadow: 0px 0px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 0 20px rgba(0,0,0,0.35);
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 25px rgba(0,255,140,0.5);
+        }
+
+        h2 {
+            margin-bottom: 10px;
+            color: #9fffc3;
         }
 
         canvas {
-            margin-top: 20px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
 
-    <h1>📊 Dashboard SmartGreen</h1>
-    <div class="card">
-        <h2>Temperatura por Data</h2>
-        <canvas id="grafico"></canvas>
+    <h1> Dashboard de Acompanhamento</h1>
+
+    <div class="container">
+
+        <div class="card">
+            <h2>🌡️ Temperatura por Data</h2>
+            <canvas id="graficoTemp"></canvas>
+        </div>
+
+        <div class="card">
+            <h2>💧 Humidade por Data</h2>
+            <canvas id="graficoHum"></canvas>
+        </div>
+
+        <div class="card">
+            <h2>🔆 Luminosidade por Data</h2>
+            <canvas id="graficoLum"></canvas>
+        </div>
+
     </div>
 
     <script>
@@ -50,26 +84,59 @@
             const dados = await res.json();
 
             const labels = dados.map(item => item.data);
-            const temperaturas = dados.map(item => parseFloat(item.valorResposta));
 
-            const ctx = document.getElementById("grafico").getContext("2d");
+            const temperaturas = dados.map(item => item.valorTemperatura);
+            const humidades = dados.map(item => item.valorHumidade);
+            const luminosidades = dados.map(item => item.luminosidade);
 
-            new Chart(ctx, {
+            const estiloLinha = {
+                borderWidth: 3,
+                tension: 0.35,
+                fill: true
+            };
+
+            // Temperatura
+            new Chart(document.getElementById("graficoTemp"), {
                 type: "line",
                 data: {
                     labels: labels,
                     datasets: [{
                         label: "Temperatura (°C)",
                         data: temperaturas,
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.3
+                        borderColor: "#00ff99",
+                        backgroundColor: "rgba(0,255,150,0.20)",
+                        ...estiloLinha
                     }]
-                },
-                options: {
-                    scales: {
-                        y: { beginAtZero: false }
-                    }
+                }
+            });
+
+            // Humidade
+            new Chart(document.getElementById("graficoHum"), {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Humidade (%)",
+                        data: humidades,
+                        borderColor: "#42a5f5",
+                        backgroundColor: "rgba(66,165,245,0.20)",
+                        ...estiloLinha
+                    }]
+                }
+            });
+
+            // Luminosidade
+            new Chart(document.getElementById("graficoLum"), {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Luminosidade (lx)",
+                        data: luminosidades,
+                        borderColor: "#ffee58",
+                        backgroundColor: "rgba(255,238,88,0.25)",
+                        ...estiloLinha
+                    }]
                 }
             });
         }
