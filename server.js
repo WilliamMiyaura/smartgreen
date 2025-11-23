@@ -13,6 +13,7 @@ const PORT = 3000;
 //app.get('/', (req, res) => {res.json(objResponse)})
 
 app.use(express.json());
+app.use(express.static("public"));
 
 const connectDB = async () => {
     try {await mongoose.connect(process.env.MONGO_URI)

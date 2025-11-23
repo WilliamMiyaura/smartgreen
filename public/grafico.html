@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard SmartGreen</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #1f4037, #99f2c8);
+            font-family: Arial, sans-serif;
+            color: #fff;
+            text-align: center;
+            padding: 30px;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.12);
+            padding: 20px;
+            border-radius: 18px;
+            backdrop-filter: blur(6px);
+            width: 80%;
+            margin: auto;
+            box-shadow: 0px 0px 15px rgba(0,0,0,0.2);
+        }
+
+        canvas {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📊 Dashboard SmartGreen</h1>
+    <div class="card">
+        <h2>Temperatura por Data</h2>
+        <canvas id="grafico"></canvas>
+    </div>
+
+    <script>
+        async function carregarDados() {
+            const res = await fetch("/resposta");
+            const dados = await res.json();
+
+            const labels = dados.map(item => item.data);
+            const temperaturas = dados.map(item => parseFloat(item.valorResposta));
+
+            const ctx = document.getElementById("grafico").getContext("2d");
+
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Temperatura (°C)",
+                        data: temperaturas,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: { beginAtZero: false }
+                    }
+                }
+            });
+        }
+
+        carregarDados();
+    </script>
+
+</body>
+</html>
