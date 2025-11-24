@@ -2,147 +2,388 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard SmartGreen</title>
-
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
+        :root {
+            --bg-dark: #0f1f17;
+            --bg-card: rgba(255, 255, 255, 0.08);
+            --green-primary: #4ade80;
+            --green-light: #86efac;
+            --text: #e2e8f0;
+            --error: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            margin: 0;
-            padding: 40px;
-            font-family: "Segoe UI", sans-serif;
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color: #e5ffe5;
+            background: linear-gradient(135deg, #0f1f17, #1a3a2a);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
         }
 
         h1 {
-            text-align: center;
-            margin-bottom: 25px;
-            font-size: 38px;
-            color: #b8ffd3;
-            text-shadow: 0 0 10px rgba(0,255,150,0.4);
-        }
-
-        .container {
-            display: grid;
-            gap: 35px;
-            max-width: 1100px;
-            margin: auto;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 25px;
-            border-radius: 20px;
-            backdrop-filter: blur(6px);
-            box-shadow: 0 0 20px rgba(0,0,0,0.35);
-            transition: transform .2s ease, box-shadow .2s ease;
-        }
-
-        .card:hover {
-            transform: scale(1.02);
-            box-shadow: 0 0 25px rgba(0,255,140,0.5);
-        }
-
-        h2 {
+            font-size: 36px;
+            color: var(--green-light);
             margin-bottom: 10px;
-            color: #9fffc3;
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .status.online {
+            background: rgba(74, 222, 128, 0.2);
+            color: var(--green-light);
+        }
+
+        .status.offline {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background: var(--green-primary);
+            color: #0f1f17;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: var(--green-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section {
+            padding: 25px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.6s ease;
+        }
+
+        .card-indicador {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .card-indicador:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-indicador .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--green-light);
+            margin: 10px 0;
+        }
+
+        .card-indicador .label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .card-indicador .time {
+            font-size: 12px;
+            opacity: 0.6;
+            margin-top: 8px;
         }
 
         canvas {
-            margin-top: 10px;
+            max-height: 280px;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            h1 { font-size: 28px; }
         }
     </style>
 </head>
 <body>
 
-    <h1> Dashboard de Acompanhamento</h1>
+<header>
+    <h1>🌱 SmartGreen Dashboard</h1>
+    <div id="statusIndicator" class="status offline">Conectando...</div>
+    <div id="ultimaAtualizacao" style="margin-top: 10px; font-size: 14px; opacity: 0.7;"></div>
+</header>
 
-    <div class="container">
+<div class="controls">
+    <button onclick="carregarDados()">🔄 Atualizar Agora</button>
+    <button onclick="toggleAutoUpdate()" id="btnAutoUpdate">⏸️ Pausar</button>
+</div>
 
-        <div class="card">
-            <h2>🌡️ Temperatura por Data</h2>
-            <canvas id="graficoTemp"></canvas>
+<div id="errorContainer"></div>
+
+<div class="grid">
+    <!-- TEMPERATURA -->
+    <div class="section">
+        <div id="cardTemperatura" class="card-indicador">
+            <div class="label">🌡️ TEMPERATURA</div>
+            <div class="value">--°C</div>
+            <div class="time">Aguardando dados...</div>
         </div>
-
-        <div class="card">
-            <h2>💧 Humidade por Data</h2>
-            <canvas id="graficoHum"></canvas>
-        </div>
-
-        <div class="card">
-            <h2>🔆 Luminosidade por Data</h2>
-            <canvas id="graficoLum"></canvas>
-        </div>
-
+        <canvas id="graficoTemperatura"></canvas>
     </div>
 
-    <script>
-        async function carregarDados() {
-            const res = await fetch("/resposta");
-            const dados = await res.json();
+    <!-- UMIDADE -->
+    <div class="section">
+        <div id="cardHumidade" class="card-indicador">
+            <div class="label">💧 UMIDADE</div>
+            <div class="value">--%</div>
+            <div class="time">Aguardando dados...</div>
+        </div>
+        <canvas id="graficoHumidade"></canvas>
+    </div>
 
-            const labels = dados.map(item => item.data);
+    <!-- LUMINOSIDADE -->
+    <div class="section">
+        <div id="cardLuz" class="card-indicador">
+            <div class="label">🔆 LUMINOSIDADE</div>
+            <div class="value">--</div>
+            <div class="time">Aguardando dados...</div>
+        </div>
+        <canvas id="graficoLuz"></canvas>
+    </div>
+</div>
 
-            const temperaturas = dados.map(item => item.valorTemperatura);
-            const humidades = dados.map(item => item.valorHumidade);
-            const luminosidades = dados.map(item => item.luminosidade);
+<script>
+// Configuração da API - detecta automaticamente o ambiente
+const API_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/resposta'
+    : 'http://3.235.223.29:3000/resposta';
 
-            const estiloLinha = {
-                borderWidth: 3,
-                tension: 0.35,
-                fill: true
-            };
+let chartTemp, chartHum, chartLuz;
+let autoUpdateInterval;
+let isAutoUpdateEnabled = true;
 
-            // Temperatura
-            new Chart(document.getElementById("graficoTemp"), {
-                type: "line",
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: "Temperatura (°C)",
-                        data: temperaturas,
-                        borderColor: "#00ff99",
-                        backgroundColor: "rgba(0,255,150,0.20)",
-                        ...estiloLinha
-                    }]
-                }
-            });
+// Função para exibir erros
+function mostrarErro(mensagem) {
+    const errorContainer = document.getElementById('errorContainer');
+    errorContainer.innerHTML = `<div class="error-message">⚠️ ${mensagem}</div>`;
+    setTimeout(() => {
+        errorContainer.innerHTML = '';
+    }, 5000);
+}
 
-            // Humidade
-            new Chart(document.getElementById("graficoHum"), {
-                type: "line",
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: "Humidade (%)",
-                        data: humidades,
-                        borderColor: "#42a5f5",
-                        backgroundColor: "rgba(66,165,245,0.20)",
-                        ...estiloLinha
-                    }]
-                }
-            });
+// Função para atualizar status de conexão
+function atualizarStatus(online) {
+    const statusEl = document.getElementById('statusIndicator');
+    if (online) {
+        statusEl.className = 'status online';
+        statusEl.textContent = '🟢 Conectado';
+    } else {
+        statusEl.className = 'status offline';
+        statusEl.textContent = '🔴 Offline';
+    }
+}
 
-            // Luminosidade
-            new Chart(document.getElementById("graficoLum"), {
-                type: "line",
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: "Luminosidade (lx)",
-                        data: luminosidades,
-                        borderColor: "#ffee58",
-                        backgroundColor: "rgba(255,238,88,0.25)",
-                        ...estiloLinha
-                    }]
-                }
-            });
+// Carregar dados da API
+async function carregarDados() {
+    try {
+        const res = await fetch(`${API_URL}?limite=20`);
+        
+        if (!res.ok) {
+            throw new Error(`Erro HTTP: ${res.status}`);
+        }
+        
+        const dados = await res.json();
+        
+        if (!dados || dados.length === 0) {
+            mostrarErro('Nenhum dado disponível');
+            atualizarStatus(false);
+            return;
         }
 
-        carregarDados();
-    </script>
+        atualizarStatus(true);
+
+        // Reverter para ordem cronológica
+        const dadosOrdenados = dados.reverse();
+        
+        const labels = dadosOrdenados.map(d => {
+            const data = new Date(d.data);
+            return data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        });
+        
+        const temp = dadosOrdenados.map(d => d.valorTemperatura);
+        const hum = dadosOrdenados.map(d => d.valorHumidade);
+        const luz = dadosOrdenados.map(d => d.luminosidade);
+
+        const ultimo = dadosOrdenados[dadosOrdenados.length - 1];
+
+        // Atualizar Cards
+        document.getElementById("cardTemperatura").innerHTML = `
+            <div class="label">🌡️ TEMPERATURA</div>
+            <div class="value">${ultimo.valorTemperatura.toFixed(1)}°C</div>
+            <div class="time">⏱️ ${ultimo.data}</div>
+        `;
+
+        document.getElementById("cardHumidade").innerHTML = `
+            <div class="label">💧 UMIDADE</div>
+            <div class="value">${ultimo.valorHumidade.toFixed(1)}%</div>
+            <div class="time">⏱️ ${ultimo.data}</div>
+        `;
+
+        document.getElementById("cardLuz").innerHTML = `
+            <div class="label">🔆 LUMINOSIDADE</div>
+            <div class="value">${ultimo.luminosidade}</div>
+            <div class="time">⏱️ ${ultimo.data}</div>
+        `;
+
+        // Atualizar timestamp
+        document.getElementById('ultimaAtualizacao').textContent = 
+            `Última atualização: ${new Date().toLocaleTimeString('pt-BR')}`;
+
+        // Criar ou atualizar gráficos
+        if (!chartTemp) {
+            chartTemp = criarGrafico("graficoTemperatura", "Temperatura (°C)", labels, temp, '#ef4444');
+            chartHum = criarGrafico("graficoHumidade", "Umidade (%)", labels, hum, '#3b82f6');
+            chartLuz = criarGrafico("graficoLuz", "Luminosidade", labels, luz, '#f59e0b');
+        } else {
+            atualizarGrafico(chartTemp, labels, temp);
+            atualizarGrafico(chartHum, labels, hum);
+            atualizarGrafico(chartLuz, labels, luz);
+        }
+
+    } catch (err) {
+        console.error("Erro ao carregar dados:", err);
+        mostrarErro(`Erro ao conectar: ${err.message}`);
+        atualizarStatus(false);
+    }
+}
+
+// Criar gráfico com Chart.js
+function criarGrafico(id, label, labels, data, color) {
+    return new Chart(document.getElementById(id), {
+        type: "line",
+        data: {
+            labels,
+            datasets: [{
+                label,
+                data,
+                borderColor: color,
+                backgroundColor: color.replace(')', ', 0.1)').replace('rgb', 'rgba'),
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 3,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: { 
+                    beginAtZero: false,
+                    ticks: { color: "#d1fae5" },
+                    grid: { color: "rgba(255,255,255,0.1)" }
+                },
+                x: { 
+                    ticks: { color: "#d1fae5", maxRotation: 45 },
+                    grid: { color: "rgba(255,255,255,0.1)" }
+                }
+            },
+            plugins: {
+                legend: { 
+                    labels: { color: "#d1fae5", font: { size: 14 } }
+                }
+            }
+        }
+    });
+}
+
+// Atualizar dados do gráfico
+function atualizarGrafico(chart, labels, data) {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = data;
+    chart.update('none'); // Sem animação para melhor performance
+}
+
+// Toggle auto-update
+function toggleAutoUpdate() {
+    isAutoUpdateEnabled = !isAutoUpdateEnabled;
+    const btn = document.getElementById('btnAutoUpdate');
+    
+    if (isAutoUpdateEnabled) {
+        btn.textContent = '⏸️ Pausar';
+        iniciarAutoUpdate();
+    } else {
+        btn.textContent = '▶️ Retomar';
+        clearInterval(autoUpdateInterval);
+    }
+}
+
+// Iniciar atualização automática
+function iniciarAutoUpdate() {
+    if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+    autoUpdateInterval = setInterval(carregarDados, 3000);
+}
+
+// Inicialização
+carregarDados();
+iniciarAutoUpdate();
+</script>
 
 </body>
 </html>
