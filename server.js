@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 import cors from "cors";
 import respostaSensores from "./respostaSensores.js";
 
+import nodemailer from "nodemailer";
+
 dotenv.config();
 
 const app = express();
@@ -27,6 +29,64 @@ const connectDB = async () => {
 
 connectDB();
 
+// --- Configuração de e-mail (usar variáveis de ambiente) ---
+const EMAIL_RECIPIENTS = [
+    "081220005@faculdade.cefsa.edu.br",
+    "081220030@faculdade.cefsa.edu.br",
+    "081220038@faculdade.cefsa.edu.br",
+    "081220039@faculdade.cefsa.edu.br",
+];
+
+let mailTransporter = null;
+if (process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const smtpPort = parseInt(process.env.SMTP_PORT, 10);
+    const smtpSecureFlag = process.env.SMTP_SECURE && process.env.SMTP_SECURE.toString().toLowerCase() === "true";
+    mailTransporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: smtpPort,
+        // secure=true means TLS on connect (usually port 465). For STARTTLS (ports 587/2525) use secure=false.
+        secure: smtpSecureFlag || smtpPort === 465,
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+        },
+    });
+} else {
+    console.warn("SMTP não configurado. Defina SMTP_HOST, SMTP_PORT, SMTP_USER e SMTP_PASS para habilitar envio de e-mails.");
+}
+
+async function sendAlertEmail(triggers, leitura) {
+    if (!mailTransporter) {
+        console.warn("Ignorando envio de e-mail — transporter não configurado.");
+        return;
+    }
+
+    const subject = `Alerta Smart Green - ${triggers.join(' / ')}`;
+    const bodyLines = [
+        `Foram detectadas as seguintes condições de alerta: ${triggers.join(', ')}`,
+        `Data: ${leitura.data || new Date().toLocaleString('pt-BR')}`,
+        `Temperatura: ${leitura.valorTemperatura} °C`,
+        `Humidade: ${leitura.valorHumidade} %`,
+        `Luminosidade: ${leitura.luminosidade}`,
+        "\nDados completos:",
+        JSON.stringify(leitura, null, 2)
+    ];
+
+    const mailOptions = {
+        from: process.env.EMAIL_FROM || process.env.SMTP_USER,
+        to: EMAIL_RECIPIENTS.join(","),
+        subject,
+        text: bodyLines.join('\n'),
+    };
+
+    try {
+        const info = await mailTransporter.sendMail(mailOptions);
+        console.log("E-mail de alerta enviado:", info.messageId || info);
+    } catch (err) {
+        console.error("Erro ao enviar e-mail de alerta:", err);
+    }
+}
+
 // Middleware de validação
 const validarDadosSensor = (req, res, next) => {
     const { valorTemperatura, valorHumidade, luminosidade } = req.body;
@@ -49,6 +109,27 @@ app.post("/resposta", validarDadosSensor, async (req, res) => {
         };
         
         const novaRespostaSensores = await respostaSensores.create(dadosComData);
+
+        // Checar limites e enviar alerta se necessário
+        const triggers = [];
+        const t = novaRespostaSensores.valorTemperatura;
+        const h = novaRespostaSensores.valorHumidade;
+
+        if (typeof t === 'number') {
+            if (t < 10) triggers.push('Temperatura muito baixa (<10°C)');
+            if (t > 30) triggers.push('Temperatura muito alta (>30°C)');
+        }
+
+        if (typeof h === 'number') {
+            if (h < 40) triggers.push('Humidade muito baixa (<40%)');
+            if (h > 70) triggers.push('Humidade muito alta (>70%)');
+        }
+
+        if (triggers.length > 0) {
+            // Envia um único e-mail com todos os gatilhos encontrados
+            sendAlertEmail(triggers, novaRespostaSensores).catch(err => console.error(err));
+        }
+
         res.status(201).json(novaRespostaSensores);
     } catch (error) {
         console.error("Erro ao criar leitura:", error);
