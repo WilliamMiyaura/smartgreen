@@ -23,6 +23,7 @@
             color: var(--text);
             padding: 20px;
             min-height: 100vh;
+            padding-bottom: 60px;
         }
 
         header {
@@ -62,7 +63,7 @@
 
         button {
             padding: 10px 20px;
-            margin: 0 10px;
+            margin: 5px;
             background: var(--green-primary);
             color: #0f1f17;
             border: none;
@@ -75,7 +76,6 @@
         button:hover {
             background: var(--green-light);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
         }
 
         button:disabled {
@@ -89,6 +89,7 @@
             gap: 25px;
             max-width: 1400px;
             margin: 0 auto;
+            margin-bottom: 80px;
         }
 
         .section {
@@ -98,7 +99,6 @@
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            animation: fadeIn 0.6s ease;
         }
 
         .card-indicador {
@@ -106,13 +106,7 @@
             padding: 20px;
             border-radius: 12px;
             margin-bottom: 20px;
-            font-size: 16px;
             text-align: center;
-            transition: transform 0.3s;
-        }
-
-        .card-indicador:hover {
-            transform: translateY(-5px);
         }
 
         .card-indicador .value {
@@ -137,33 +131,137 @@
             max-height: 280px;
         }
 
-        .error-message {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--error);
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 20px auto;
-            max-width: 600px;
+        /* Debug Panel - Fixo na parte inferior */
+        .debug-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .debug-container.hidden {
+            transform: translateY(calc(100% - 45px));
         }
+
+        .debug-header {
+            background: rgba(0,0,0,0.9);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 2px solid var(--green-primary);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .debug-header:hover {
+            background: rgba(0,0,0,0.95);
+        }
+
+        .debug-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .debug-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .debug-actions button {
+            padding: 6px 12px;
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .toggle-icon {
+            transition: transform 0.3s ease;
+            font-size: 18px;
+        }
+
+        .debug-container.hidden .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .debug-panel {
+            background: rgba(0,0,0,0.95);
+            padding: 15px 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .debug-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .debug-panel::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3);
+        }
+
+        .debug-panel::-webkit-scrollbar-thumb {
+            background: var(--green-primary);
+            border-radius: 4px;
+        }
+
+        .debug-panel .log {
+            margin: 5px 0;
+            padding: 8px;
+            border-left: 3px solid;
+            background: rgba(255,255,255,0.03);
+            border-radius: 0 4px 4px 0;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .debug-panel .log.info { border-color: #3b82f6; }
+        .debug-panel .log.success { border-color: #10b981; }
+        .debug-panel .log.error { border-color: #ef4444; }
+        .debug-panel .log.warning { border-color: #f59e0b; }
+
+        .log-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .log.info .log-badge { background: #3b82f6; }
+        .log.success .log-badge { background: #10b981; }
+        .log.error .log-badge { background: #ef4444; }
+        .log.warning .log-badge { background: #f59e0b; }
 
         @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
+            .grid { grid-template-columns: 1fr; }
             h1 { font-size: 28px; }
+            .debug-panel { max-height: 200px; font-size: 11px; }
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>🌱 SmartGreen Dashboard</h1>
+    <h1> Dashboard de Acompanhamento</h1>
     <div id="statusIndicator" class="status offline">Conectando...</div>
     <div id="ultimaAtualizacao" style="margin-top: 10px; font-size: 14px; opacity: 0.7;"></div>
 </header>
@@ -171,9 +269,8 @@
 <div class="controls">
     <button onclick="carregarDados()">🔄 Atualizar Agora</button>
     <button onclick="toggleAutoUpdate()" id="btnAutoUpdate">⏸️ Pausar</button>
+    <button onclick="testarAPI()">🧪 Testar API</button>
 </div>
-
-<div id="errorContainer"></div>
 
 <div class="grid">
     <!-- TEMPERATURA -->
@@ -207,26 +304,70 @@
     </div>
 </div>
 
-<script>
-// Configuração da API - detecta automaticamente o ambiente
-const API_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/resposta'
-    : 'http://3.235.223.29:3000/resposta';
+<!-- Debug Panel Flutuante -->
+<div class="debug-container" id="debugContainer">
+    <div class="debug-header" onclick="toggleDebugPanel()">
+        <div class="debug-title">
+            <span>🔧</span>
+            <span>Console de Debug</span>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="debug-actions" onclick="event.stopPropagation()">
+            <button onclick="limparLogs()"> Limpar</button>
+            <button onclick="testarAPI()"> Testar</button>
+        </div>
+    </div>
+    <div class="debug-panel" id="debugPanel">
+        <div class="log info">
+            <span class="log-badge">INFO</span>
+            Dashboard iniciado - Aguardando primeira requisição...
+        </div>
+    </div>
+</div>
 
+<script>
+// Configuração
+const API_URL = 'http://3.235.223.29:3000/resposta';
 let chartTemp, chartHum, chartLuz;
 let autoUpdateInterval;
 let isAutoUpdateEnabled = true;
 
-// Função para exibir erros
-function mostrarErro(mensagem) {
-    const errorContainer = document.getElementById('errorContainer');
-    errorContainer.innerHTML = `<div class="error-message">⚠️ ${mensagem}</div>`;
-    setTimeout(() => {
-        errorContainer.innerHTML = '';
-    }, 5000);
+// Toggle Debug Panel
+function toggleDebugPanel() {
+    const container = document.getElementById('debugContainer');
+    container.classList.toggle('hidden');
 }
 
-// Função para atualizar status de conexão
+// Sistema de Logs
+function addLog(message, type = 'info') {
+    const panel = document.getElementById('debugPanel');
+    const timestamp = new Date().toLocaleTimeString('pt-BR');
+    const log = document.createElement('div');
+    log.className = `log ${type}`;
+    
+    const badges = {
+        info: 'INFO',
+        success: 'OK',
+        error: 'ERRO',
+        warning: 'AVISO'
+    };
+    
+    log.innerHTML = `
+        <span class="log-badge">${badges[type]}</span>
+        [${timestamp}] ${message}
+    `;
+    
+    panel.appendChild(log);
+    panel.scrollTop = panel.scrollHeight;
+    console.log(`[${type.toUpperCase()}] ${message}`);
+}
+
+function limparLogs() {
+    document.getElementById('debugPanel').innerHTML = '';
+    addLog('Logs limpos', 'info');
+}
+
+// Atualizar status
 function atualizarStatus(online) {
     const statusEl = document.getElementById('statusIndicator');
     if (online) {
@@ -238,38 +379,80 @@ function atualizarStatus(online) {
     }
 }
 
-// Carregar dados da API
+// Testar API
+async function testarAPI() {
+    addLog(' Iniciando teste da API...', 'info');
+    addLog(` URL configurada: ${API_URL}`, 'info');
+    
+    try {
+        addLog(' Fazendo requisição GET...', 'info');
+        const response = await fetch(API_URL);
+        
+        addLog(` Status HTTP: ${response.status} ${response.statusText}`, 
+               response.ok ? 'success' : 'error');
+        
+        if (!response.ok) {
+            addLog(` Erro na resposta. Verifique se o servidor está rodando.`, 'error');
+            return;
+        }
+        
+        const data = await response.json();
+        addLog(`✅ Dados recebidos: ${data.length} registros`, 'success');
+        
+        if (data.length > 0) {
+            const ultimo = data[data.length - 1];
+            addLog(` Último registro: Temp=${ultimo.valorTemperatura}°C, Hum=${ultimo.valorHumidade}%, Luz=${ultimo.luminosidade}`, 'success');
+        } else {
+            addLog(' Nenhum dado encontrado no banco. Execute o simulador primeiro!', 'warning');
+        }
+        
+    } catch (error) {
+        addLog(` Erro ao testar API: ${error.message}`, 'error');
+    }
+}
+
+// Carregar dados
 async function carregarDados() {
+    addLog('🔄 Carregando dados...', 'info');
+    
     try {
         const res = await fetch(`${API_URL}?limite=20`);
         
         if (!res.ok) {
-            throw new Error(`Erro HTTP: ${res.status}`);
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
         
         const dados = await res.json();
+        addLog(`✅ ${dados.length} registros recebidos`, 'success');
         
         if (!dados || dados.length === 0) {
-            mostrarErro('Nenhum dado disponível');
+            addLog('⚠️ Array vazio retornado. Banco sem dados?', 'warning');
             atualizarStatus(false);
             return;
         }
 
         atualizarStatus(true);
 
-        // Reverter para ordem cronológica
-        const dadosOrdenados = dados.reverse();
+        // Processar dados
+        const dadosOrdenados = [...dados].reverse();
         
         const labels = dadosOrdenados.map(d => {
-            const data = new Date(d.data);
-            return data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            try {
+                return new Date(d.data).toLocaleTimeString('pt-BR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            } catch {
+                return d.data;
+            }
         });
         
-        const temp = dadosOrdenados.map(d => d.valorTemperatura);
-        const hum = dadosOrdenados.map(d => d.valorHumidade);
-        const luz = dadosOrdenados.map(d => d.luminosidade);
+        const temp = dadosOrdenados.map(d => parseFloat(d.valorTemperatura) || 0);
+        const hum = dadosOrdenados.map(d => parseFloat(d.valorHumidade) || 0);
+        const luz = dadosOrdenados.map(d => parseInt(d.luminosidade) || 0);
 
         const ultimo = dadosOrdenados[dadosOrdenados.length - 1];
+        addLog(`📈 Atualizado - Temp: ${ultimo.valorTemperatura.toFixed(1)}°C, Hum: ${ultimo.valorHumidade.toFixed(1)}%, Luz: ${ultimo.luminosidade}`, 'success');
 
         // Atualizar Cards
         document.getElementById("cardTemperatura").innerHTML = `
@@ -290,7 +473,6 @@ async function carregarDados() {
             <div class="time">⏱️ ${ultimo.data}</div>
         `;
 
-        // Atualizar timestamp
         document.getElementById('ultimaAtualizacao').textContent = 
             `Última atualização: ${new Date().toLocaleTimeString('pt-BR')}`;
 
@@ -306,13 +488,12 @@ async function carregarDados() {
         }
 
     } catch (err) {
-        console.error("Erro ao carregar dados:", err);
-        mostrarErro(`Erro ao conectar: ${err.message}`);
+        addLog(`❌ ERRO: ${err.message}`, 'error');
         atualizarStatus(false);
     }
 }
 
-// Criar gráfico com Chart.js
+// Criar gráfico
 function criarGrafico(id, label, labels, data, color) {
     return new Chart(document.getElementById(id), {
         type: "line",
@@ -353,11 +534,11 @@ function criarGrafico(id, label, labels, data, color) {
     });
 }
 
-// Atualizar dados do gráfico
+// Atualizar gráfico
 function atualizarGrafico(chart, labels, data) {
     chart.data.labels = labels;
     chart.data.datasets[0].data = data;
-    chart.update('none'); // Sem animação para melhor performance
+    chart.update('none');
 }
 
 // Toggle auto-update
@@ -367,20 +548,24 @@ function toggleAutoUpdate() {
     
     if (isAutoUpdateEnabled) {
         btn.textContent = '⏸️ Pausar';
+        addLog('▶️ Auto-atualização ativada (3s)', 'success');
         iniciarAutoUpdate();
     } else {
         btn.textContent = '▶️ Retomar';
+        addLog('⏸️ Auto-atualização pausada', 'warning');
         clearInterval(autoUpdateInterval);
     }
 }
 
-// Iniciar atualização automática
+// Iniciar auto-update
 function iniciarAutoUpdate() {
     if (autoUpdateInterval) clearInterval(autoUpdateInterval);
     autoUpdateInterval = setInterval(carregarDados, 3000);
 }
 
 // Inicialização
+addLog(' Iniciando SmartGreen Dashboard...', 'success');
+addLog(`🌐 Ambiente: ${window.location.hostname}`, 'info');
 carregarDados();
 iniciarAutoUpdate();
 </script>

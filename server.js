@@ -18,9 +18,9 @@ app.use(express.static("public"));
 const connectDB = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
-        console.log("✅ Conectado ao MongoDB");
+        console.log("Conectado ao MongoDB");
     } catch (error) {
-        console.error("❌ Erro ao conectar ao banco de dados:", error);
+        console.error("Erro ao conectar ao banco de dados:", error);
         process.exit(1);
     }
 };
@@ -157,7 +157,6 @@ app.use((req, res) => {
 
 // Iniciar servidor
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando na porta ${PORT}`);
-    console.log(`📊 Dashboard disponível em: http://localhost:${PORT}`);
-    console.log(`🔌 API disponível em: http://localhost:${PORT}/resposta`);
+    console.log(`Servidor rodando na porta ${PORT}`);
+
 });
