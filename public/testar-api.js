@@ -1,7 +1,7 @@
 // Script para testar a API e adicionar dados de exemplo
 // Execute com: node testar-api.js
 
-const API_URL = "http://44.200.79.228:3000/resposta";
+const API_URL = "http://13.217.220.36:3000/resposta";
 
 // Função para testar GET
 async function testarGet() {
@@ -53,7 +53,7 @@ async function adicionarDadosTeste() {
 async function testarHealth() {
     console.log("\n🏥 Testando Health Check...");
     try {
-        const response = await fetch("http://44.200.79.228:3000/health");
+        const response = await fetch("http://13.217.220.36:3000/health");
         const data = await response.json();
         console.log("✅ Status do servidor:", data);
     } catch (error) {
